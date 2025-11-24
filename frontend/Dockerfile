@@ -1,7 +1,14 @@
 ##########################################
+# Configuration ②: Nginx reverse proxy to backend
+# Flutter Web app makes requests to /api/* (same origin)
+# Nginx (inside Cloud Run container) proxies to internal backend
+# This allows backend to be INGRESS_TRAFFIC_INTERNAL_ONLY
+##########################################
+
+##########################################
 # Build Flutter Web Application
 ##########################################
-FROM instrumentisto/flutter:3 AS builder
+FROM instrumentisto/flutter:3.35.0 AS builder
 
 WORKDIR /app
 
@@ -13,12 +20,13 @@ RUN flutter pub get
 COPY . .
 
 # Build Flutter web app
-RUN flutter build web --release
+# Note: API calls go to same origin /api/* - nginx proxies to backend
+RUN flutter build web --release --dart-define-from-file=flavor/prod.json
 
 ##########################################
-# Deploy with Nginx
+# Deploy with Nginx (with reverse proxy)
 ##########################################
-FROM nginx:stable-alpine
+FROM nginx:alpine
 
 # Copy Flutter build artifacts
 COPY --from=builder /app/build/web /usr/share/nginx/html

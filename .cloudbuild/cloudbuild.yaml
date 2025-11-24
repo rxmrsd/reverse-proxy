@@ -10,7 +10,19 @@ steps:
       - '.'
     id: 'deploy-backend'
 
-  # Build and deploy frontend (depends on backend)
+  # Build and deploy frontend-static (Configuration ①: Static file serving only)
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'builds'
+      - 'submit'
+      - '--config=.cloudbuild/frontend-static.yaml'
+      - '--region=${_REGION}'
+      - '--substitutions=_REGION=${_REGION},_REPOSITORY=${_REPOSITORY}'
+      - '.'
+    id: 'deploy-frontend-static'
+    waitFor: ['deploy-backend']
+
+  # Build and deploy frontend (Configuration ②: Reverse proxy)
   - name: 'gcr.io/cloud-builders/gcloud'
     args:
       - 'builds'
@@ -36,12 +48,17 @@ steps:
           --region=${_REGION} \
           --format='value(status.url)'
         echo ""
-        echo "Frontend URL:"
+        echo "Frontend (Static - Config ①) URL:"
+        gcloud run services describe reverse-proxy-frontend-static \
+          --region=${_REGION} \
+          --format='value(status.url)'
+        echo ""
+        echo "Frontend (Proxy - Config ②) URL:"
         gcloud run services describe reverse-proxy-frontend \
           --region=${_REGION} \
           --format='value(status.url)'
         echo "================================================"
-    waitFor: ['deploy-frontend']
+    waitFor: ['deploy-frontend-static', 'deploy-frontend']
 
 substitutions:
   _REGION: asia-northeast1
