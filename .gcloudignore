@@ -36,44 +36,64 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+.venv/
+venv/
+ENV/
+env/
 
-# Flutter/Dart build outputs
+# Flutter/Dart build outputs and caches
 frontend/build/
 frontend/.dart_tool/
 frontend/.flutter-plugins
 frontend/.flutter-plugins-dependencies
 frontend/.packages
 frontend/pubspec.lock
+frontend/.metadata
+frontend/*.iml
+frontend/analysis_options.yaml
+frontend/test/
+frontend/README.md
+frontend/.pub-cache/
 
-# Terraform
-terraform/.terraform/
-terraform/.terraform.lock.hcl
-terraform/*.tfstate
-terraform/*.tfstate.*
-terraform/*.tfstate.backup
-terraform/tfplan
-terraform/*.auto.tfvars
+# Terraform (not needed for Cloud Build)
+terraform/
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+.terraform.lock.hcl
+tfplan
+*.auto.tfvars
 
 # Environment variables
 .env
 .env.local
 .env.*.local
 
-# IDE
+# IDE and editor files
 .vscode/
 .idea/
+.claude/
 *.swp
 *.swo
 *~
 .DS_Store
+*.iml
+.metadata
 
 # Logs
 *.log
 
-# Documentation (README is needed for context, but can be excluded if desired)
-# README.md
-# DEPLOYMENT.md
+# Documentation and deployment scripts (not needed for builds)
+README.md
+DEPLOYMENT.md
+deployment/
+.env.example
 
 # Local Docker Compose overrides
 compose.override.yaml
 docker-compose.override.yml
+compose.yaml
+
+# Backend files (when building frontend) and vice versa
+# Note: These are handled by cloudbuild yaml dir: parameter
