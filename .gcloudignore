@@ -55,15 +55,16 @@ frontend/test/
 frontend/README.md
 frontend/.pub-cache/
 
-# Terraform (not needed for Cloud Build)
-terraform/
+# Terraform state and cache (keep .tf files for deployment)
 .terraform/
+terraform/.terraform/
 *.tfstate
 *.tfstate.*
 *.tfstate.backup
 .terraform.lock.hcl
-tfplan
+terraform/tfplan
 *.auto.tfvars
+terraform/*.auto.tfvars
 
 # Environment variables
 .env
