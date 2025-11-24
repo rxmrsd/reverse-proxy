@@ -91,14 +91,12 @@ reverse-proxy/
 │   ├── nginx.conf        # Nginx設定ファイル（テンプレート）
 │   ├── proxy_params_common  # プロキシ共通設定
 │   ├── docker-entrypoint.sh # 起動時設定スクリプト
-│   ├── pubspec.yaml      # Flutter依存関係
-│   └── cloudbuild.yaml   # Cloud Build設定（フロントエンド）
+│   └── pubspec.yaml      # Flutter依存関係
 │
 ├── backend/              # FastAPIアプリケーション
 │   ├── main.py           # FastAPIアプリケーションコード
 │   ├── requirements.txt  # Python依存関係
-│   ├── Dockerfile        # Dockerイメージ設定
-│   └── cloudbuild.yaml   # Cloud Build設定（バックエンド）
+│   └── Dockerfile        # Dockerイメージ設定
 │
 ├── terraform/            # Terraformインフラ定義
 │   ├── main.tf           # プロバイダー設定
@@ -117,11 +115,15 @@ reverse-proxy/
 │   ├── build-images.sh   # Dockerイメージビルド・プッシュ
 │   └── destroy.sh        # リソース削除
 │
+├── .cloudbuild/          # Cloud Build設定ファイル
+│   ├── cloudbuild.yaml   # Cloud Runへ直接デプロイ
+│   ├── cloudbuild-deploy.yaml  # Cloud Build + Terraform統合デプロイ
+│   ├── backend.yaml      # バックエンド単体デプロイ
+│   └── frontend.yaml     # フロントエンド単体デプロイ
+│
 ├── .env.example          # 環境変数設定例
 ├── .gitignore            # Git除外ファイル
 ├── compose.yaml          # Docker Compose設定
-├── cloudbuild.yaml       # Cloud Build設定（Cloud Runへ直接デプロイ）
-├── cloudbuild-deploy.yaml  # Cloud Build + Terraform統合デプロイ
 └── DEPLOYMENT.md         # デプロイガイド
 ```
 
@@ -263,12 +265,21 @@ cp .env.example .env
 ```bash
 # Cloud Build + Terraform統合デプロイ
 gcloud builds submit \
-  --config=cloudbuild-deploy.yaml \
+  --config=.cloudbuild/cloudbuild-deploy.yaml \
   --substitutions=_REGION=asia-northeast1,_REPOSITORY=reverse-proxy
 
 # Cloud Build のみ（Terraformなし）
 gcloud builds submit \
-  --config=cloudbuild.yaml \
+  --config=.cloudbuild/cloudbuild.yaml \
+  --substitutions=_REGION=asia-northeast1,_REPOSITORY=reverse-proxy
+
+# バックエンドまたはフロントエンド単体デプロイ
+gcloud builds submit \
+  --config=.cloudbuild/backend.yaml \
+  --substitutions=_REGION=asia-northeast1,_REPOSITORY=reverse-proxy
+
+gcloud builds submit \
+  --config=.cloudbuild/frontend.yaml \
   --substitutions=_REGION=asia-northeast1,_REPOSITORY=reverse-proxy
 
 # Terraformのみ（手動イメージビルド後）

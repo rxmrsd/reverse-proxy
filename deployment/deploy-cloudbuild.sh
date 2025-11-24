@@ -46,7 +46,7 @@ gcloud config set project "$GCP_PROJECT_ID"
 # Submit build to Cloud Build
 echo "Submitting build to Cloud Build..."
 gcloud builds submit \
-  --config=cloudbuild-deploy.yaml \
+  --config=.cloudbuild/cloudbuild-deploy.yaml \
   --substitutions=_REGION="$GCP_REGION",_REPOSITORY="$ARTIFACT_REGISTRY_REPOSITORY"
 
 echo ""

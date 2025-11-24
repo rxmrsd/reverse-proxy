@@ -79,7 +79,7 @@ This is the simplest method that handles everything: creating Artifact Registry,
 ```bash
 # One command to deploy everything
 gcloud builds submit \
-  --config=cloudbuild-deploy.yaml \
+  --config=.cloudbuild/cloudbuild-deploy.yaml \
   --substitutions=_REGION=asia-northeast1,_REPOSITORY=reverse-proxy
 ```
 
@@ -111,7 +111,7 @@ terraform apply -target=google_artifact_registry_repository.docker_repo
 cd ..
 
 # Then run the complete deployment
-gcloud builds submit --config=cloudbuild-deploy.yaml
+gcloud builds submit --config=.cloudbuild/cloudbuild-deploy.yaml
 ```
 
 ### Method 2: Cloud Build Only (Without Terraform)
@@ -121,12 +121,12 @@ Deploy services directly using Cloud Build without Terraform.
 ```bash
 # Deploy backend
 gcloud builds submit \
-  --config=backend/cloudbuild.yaml \
+  --config=.cloudbuild/backend.yaml \
   --substitutions=_REGION=asia-northeast1,_REPOSITORY=reverse-proxy
 
 # Deploy frontend (after backend is deployed)
 gcloud builds submit \
-  --config=frontend/cloudbuild.yaml \
+  --config=.cloudbuild/frontend.yaml \
   --substitutions=_REGION=asia-northeast1,_REPOSITORY=reverse-proxy
 ```
 
