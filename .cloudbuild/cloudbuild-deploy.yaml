@@ -49,20 +49,6 @@ steps:
     id: 'terraform-init'
     waitFor: ['push-backend', 'push-frontend']
 
-  # Step 5.5: Import existing Artifact Registry (ignore errors if already imported)
-  - name: 'hashicorp/terraform:1.6'
-    entrypoint: 'sh'
-    args:
-      - '-c'
-      - |
-        terraform import \
-          google_artifact_registry_repository.docker_repo \
-          projects/${PROJECT_ID}/locations/${_REGION}/repositories/${_REPOSITORY} \
-          || echo "Repository already imported or does not exist, continuing..."
-    dir: 'terraform'
-    id: 'terraform-import'
-    waitFor: ['terraform-init']
-
   # Step 6: Terraform plan
   - name: 'hashicorp/terraform:1.6'
     args:
@@ -74,7 +60,7 @@ steps:
       - '-out=tfplan'
     dir: 'terraform'
     id: 'terraform-plan'
-    waitFor: ['terraform-import']
+    waitFor: ['terraform-init']
 
   # Step 7: Terraform apply
   - name: 'hashicorp/terraform:1.6'
