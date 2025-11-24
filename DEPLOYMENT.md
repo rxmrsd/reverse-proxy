@@ -6,17 +6,73 @@ This guide explains how to deploy the reverse proxy application to Google Cloud 
 
 1. Google Cloud Project with billing enabled
 2. gcloud CLI installed and configured
-3. Required APIs enabled:
+
+## Quick Start with Deployment Scripts (Recommended)
+
+The easiest way to deploy is using the provided deployment scripts with environment variables.
+
+### Step 1: Configure Environment Variables
 
 ```bash
-gcloud services enable run.googleapis.com
-gcloud services enable cloudbuild.googleapis.com
-gcloud services enable artifactregistry.googleapis.com
+# Copy the example .env file
+cp .env.example .env
+
+# Edit .env and set your values
+# Required: GCP_PROJECT_ID
+# Optional: GCP_REGION, ARTIFACT_REGISTRY_REPOSITORY, IMAGE_TAG
 ```
 
-## Deployment Methods
+### Step 2: Initial Setup
 
-### Method 1: Complete Deployment with Cloud Build + Terraform (Recommended)
+Run the setup script to enable APIs and create Artifact Registry:
+
+```bash
+./deployment/setup.sh
+```
+
+This will:
+- Enable required Google Cloud APIs (Cloud Run, Cloud Build, Artifact Registry)
+- Create an Artifact Registry repository for Docker images
+
+### Step 3: Deploy
+
+Choose one of the deployment methods:
+
+#### Option A: Cloud Build + Terraform (Recommended)
+
+```bash
+./deployment/deploy-cloudbuild.sh
+```
+
+This will:
+1. Build Docker images for backend and frontend
+2. Push images to Artifact Registry
+3. Deploy Cloud Run services using Terraform
+4. Display the deployment URLs
+
+#### Option B: Terraform Only
+
+If you want to build images separately:
+
+```bash
+# First, build and push images
+./deployment/build-images.sh
+
+# Then deploy with Terraform
+./deployment/deploy-terraform.sh
+```
+
+### Cleanup
+
+To delete all deployed resources:
+
+```bash
+./deployment/destroy.sh
+```
+
+## Manual Deployment Methods
+
+### Method 1: Complete Deployment with Cloud Build + Terraform
 
 This is the simplest method that handles everything: creating Artifact Registry, building images, pushing them, and deploying with Terraform.
 

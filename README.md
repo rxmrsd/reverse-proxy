@@ -110,6 +110,15 @@ reverse-proxy/
 │   ├── terraform.tfvars.example  # 変数ファイル例
 │   └── .gitignore        # Terraform用.gitignore
 │
+├── deployment/           # デプロイスクリプト
+│   ├── setup.sh          # 初期セットアップ（API有効化、Artifact Registry作成）
+│   ├── deploy-cloudbuild.sh  # Cloud Build + Terraformデプロイ
+│   ├── deploy-terraform.sh   # Terraformのみでデプロイ
+│   ├── build-images.sh   # Dockerイメージビルド・プッシュ
+│   └── destroy.sh        # リソース削除
+│
+├── .env.example          # 環境変数設定例
+├── .gitignore            # Git除外ファイル
 ├── compose.yaml          # Docker Compose設定
 ├── cloudbuild.yaml       # Cloud Build設定（Cloud Runへ直接デプロイ）
 ├── cloudbuild-deploy.yaml  # Cloud Build + Terraform統合デプロイ
@@ -226,23 +235,37 @@ COPY nginx.conf /etc/nginx/nginx.conf.template
 
 このアプリケーションはGoogle Cloud Runにデプロイできます。詳細な手順は [DEPLOYMENT.md](DEPLOYMENT.md) を参照してください。
 
-### 推奨: Cloud Build + Terraform統合デプロイ
+### デプロイスクリプトを使用（推奨）
+
+環境変数ファイルを使った簡単なデプロイ:
 
 ```bash
-# 1コマンドで完全デプロイ（イメージビルド→プッシュ→Terraformデプロイ）
+# 1. 環境変数を設定
+cp .env.example .env
+# .envファイルを編集してGCP_PROJECT_IDなどを設定
+
+# 2. 初期セットアップ（初回のみ）
+./deployment/setup.sh
+
+# 3. デプロイ
+./deployment/deploy-cloudbuild.sh
+```
+
+利用可能なスクリプト:
+- `setup.sh` - API有効化とArtifact Registry作成
+- `deploy-cloudbuild.sh` - Cloud Build + Terraformで自動デプロイ
+- `deploy-terraform.sh` - Terraformのみでデプロイ
+- `build-images.sh` - Dockerイメージのビルドとプッシュ
+- `destroy.sh` - 全リソースの削除
+
+### 手動デプロイ
+
+```bash
+# Cloud Build + Terraform統合デプロイ
 gcloud builds submit \
   --config=cloudbuild-deploy.yaml \
   --substitutions=_REGION=asia-northeast1,_REPOSITORY=reverse-proxy
-```
 
-このコマンドで以下が自動実行されます:
-1. Artifact RegistryへのDockerイメージビルド・プッシュ
-2. TerraformによるCloud Runサービスのデプロイ
-3. バックエンドURLの自動注入
-
-### その他のデプロイ方法
-
-```bash
 # Cloud Build のみ（Terraformなし）
 gcloud builds submit \
   --config=cloudbuild.yaml \

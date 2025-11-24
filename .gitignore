@@ -1,0 +1,16 @@
+# Environment variables
+.env
+
+# Terraform plan files
+*.tfplan
+tfplan
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
