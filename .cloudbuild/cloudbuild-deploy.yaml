@@ -5,7 +5,7 @@ steps:
     args:
       - 'build'
       - '-t'
-      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-backend:${SHORT_SHA}'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-backend:$BUILD_ID'
       - '-t'
       - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-backend:latest'
       - './backend'
@@ -16,7 +16,7 @@ steps:
     args:
       - 'build'
       - '-t'
-      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-frontend:${SHORT_SHA}'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-frontend:$BUILD_ID'
       - '-t'
       - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-frontend:latest'
       - './frontend'
@@ -56,7 +56,7 @@ steps:
       - '-var=project_id=${PROJECT_ID}'
       - '-var=region=${_REGION}'
       - '-var=repository_name=${_REPOSITORY}'
-      - '-var=image_tag=${SHORT_SHA}'
+      - '-var=image_tag=$BUILD_ID'
       - '-out=tfplan'
     dir: 'terraform'
     id: 'terraform-plan'

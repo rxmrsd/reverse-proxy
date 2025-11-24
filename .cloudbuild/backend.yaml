@@ -4,7 +4,7 @@ steps:
     args:
       - 'build'
       - '-t'
-      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-backend:${SHORT_SHA}'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-backend:$BUILD_ID'
       - '-t'
       - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-backend:latest'
       - '.'
@@ -14,7 +14,7 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
-      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-backend:${SHORT_SHA}'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-backend:$BUILD_ID'
 
   - name: 'gcr.io/cloud-builders/docker'
     args:
@@ -29,7 +29,7 @@ steps:
       - 'deploy'
       - 'reverse-proxy-backend'
       - '--image'
-      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-backend:${SHORT_SHA}'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-backend:$BUILD_ID'
       - '--region'
       - '${_REGION}'
       - '--platform'
@@ -55,5 +55,5 @@ options:
   machineType: 'N1_HIGHCPU_8'
 
 images:
-  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-backend:${SHORT_SHA}'
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-backend:$BUILD_ID'
   - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-backend:latest'

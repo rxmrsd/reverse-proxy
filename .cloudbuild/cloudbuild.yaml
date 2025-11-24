@@ -4,7 +4,8 @@ steps:
     args:
       - 'builds'
       - 'submit'
-      - '--config=backend/cloudbuild.yaml'
+      - '--config=.cloudbuild/backend.yaml'
+      - '--region=${_REGION}'
       - '--substitutions=_REGION=${_REGION},_REPOSITORY=${_REPOSITORY}'
       - '.'
     id: 'deploy-backend'
@@ -14,7 +15,8 @@ steps:
     args:
       - 'builds'
       - 'submit'
-      - '--config=frontend/cloudbuild.yaml'
+      - '--config=.cloudbuild/frontend.yaml'
+      - '--region=${_REGION}'
       - '--substitutions=_REGION=${_REGION},_REPOSITORY=${_REPOSITORY}'
       - '.'
     id: 'deploy-frontend'

@@ -4,7 +4,7 @@ steps:
     args:
       - 'build'
       - '-t'
-      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-frontend:${SHORT_SHA}'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-frontend:$BUILD_ID'
       - '-t'
       - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-frontend:latest'
       - '.'
@@ -15,7 +15,7 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
-      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-frontend:${SHORT_SHA}'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-frontend:$BUILD_ID'
 
   - name: 'gcr.io/cloud-builders/docker'
     args:
@@ -40,7 +40,7 @@ steps:
       - |
         BACKEND_URL=$(cat /workspace/backend_url.txt)
         gcloud run deploy reverse-proxy-frontend \
-          --image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-frontend:${SHORT_SHA} \
+          --image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-frontend:$BUILD_ID \
           --region=${_REGION} \
           --platform=managed \
           --allow-unauthenticated \
@@ -60,7 +60,7 @@ options:
   machineType: 'N1_HIGHCPU_8'
 
 images:
-  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-frontend:${SHORT_SHA}'
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-frontend:$BUILD_ID'
   - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-frontend:latest'
 
 timeout: '1800s'
