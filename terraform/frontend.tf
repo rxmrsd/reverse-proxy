@@ -1,4 +1,4 @@
-# Cloud Run service for Frontend (Flutter Web + Nginx)
+# Cloud Run service for Frontend (Configuration ②: Reverse proxy)
 resource "google_cloud_run_v2_service" "frontend" {
   name     = var.frontend_service_name
   location = var.region
@@ -41,10 +41,53 @@ resource "google_cloud_run_v2_service" "frontend" {
   depends_on = [google_cloud_run_v2_service.backend]
 }
 
+# Cloud Run service for Frontend Static (Configuration ①: Static file serving only)
+resource "google_cloud_run_v2_service" "frontend_static" {
+  name     = var.frontend_static_service_name
+  location = var.region
+
+  template {
+    containers {
+      image = local.frontend_static_image_url
+
+      ports {
+        container_port = 8080
+      }
+
+      resources {
+        limits = {
+          cpu    = "1"
+          memory = "512Mi"
+        }
+      }
+    }
+
+    scaling {
+      min_instance_count = 0
+      max_instance_count = 10
+    }
+  }
+
+  traffic {
+    type    = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
+    percent = 100
+  }
+
+  # Allow all traffic to frontend (public access)
+  ingress = "INGRESS_TRAFFIC_ALL"
+
+  depends_on = [google_cloud_run_v2_service.backend]
+}
+
 # Note: Authentication is handled by gcloud run deploy --allow-unauthenticated in Cloud Build
 # IAM settings are not managed by Terraform to avoid permission issues
 
 output "frontend_url" {
-  description = "URL of the frontend Cloud Run service"
+  description = "URL of the frontend Cloud Run service (reverse proxy)"
   value       = google_cloud_run_v2_service.frontend.uri
+}
+
+output "frontend_static_url" {
+  description = "URL of the frontend static Cloud Run service"
+  value       = google_cloud_run_v2_service.frontend_static.uri
 }

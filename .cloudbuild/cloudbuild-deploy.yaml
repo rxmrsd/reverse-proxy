@@ -11,7 +11,7 @@ steps:
       - './backend'
     id: 'build-backend'
 
-  # Step 2: Build frontend image
+  # Step 2: Build frontend image (reverse proxy)
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
@@ -21,6 +21,18 @@ steps:
       - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-frontend:latest'
       - './frontend'
     id: 'build-frontend'
+    timeout: '1200s'
+
+  # Step 2.5: Build frontend-static image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-frontend-static:$BUILD_ID'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-frontend-static:latest'
+      - './frontend-static'
+    id: 'build-frontend-static'
     timeout: '1200s'
 
   # Step 3: Push backend image
@@ -41,13 +53,22 @@ steps:
     id: 'push-frontend'
     waitFor: ['build-frontend']
 
+  # Step 4.5: Push frontend-static image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '--all-tags'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-frontend-static'
+    id: 'push-frontend-static'
+    waitFor: ['build-frontend-static']
+
   # Step 5: Terraform init
   - name: 'hashicorp/terraform:1.6'
     args:
       - 'init'
     dir: 'terraform'
     id: 'terraform-init'
-    waitFor: ['push-backend', 'push-frontend']
+    waitFor: ['push-backend', 'push-frontend', 'push-frontend-static']
 
   # Step 6: Terraform plan
   - name: 'hashicorp/terraform:1.6'
@@ -87,12 +108,19 @@ steps:
           --role="roles/run.invoker" \
           --quiet || echo "Backend IAM policy already set"
 
-        # Allow unauthenticated access to frontend
+        # Allow unauthenticated access to frontend (reverse proxy)
         gcloud run services add-iam-policy-binding reverse-proxy-frontend \
           --region=${_REGION} \
           --member="allUsers" \
           --role="roles/run.invoker" \
           --quiet || echo "Frontend IAM policy already set"
+
+        # Allow unauthenticated access to frontend-static
+        gcloud run services add-iam-policy-binding reverse-proxy-frontend-static \
+          --region=${_REGION} \
+          --member="allUsers" \
+          --role="roles/run.invoker" \
+          --quiet || echo "Frontend-static IAM policy already set"
 
         echo "IAM policies set successfully"
     id: 'set-iam-policies'
@@ -110,8 +138,11 @@ steps:
         echo "Backend URL (internal only):"
         terraform output -raw backend_url
         echo ""
-        echo "Frontend URL (public):"
+        echo "Frontend (Reverse Proxy - Config ②) URL:"
         terraform output -raw frontend_url
+        echo ""
+        echo "Frontend Static (Config ①) URL:"
+        terraform output -raw frontend_static_url
         echo "================================================"
     dir: 'terraform'
     id: 'output-urls'

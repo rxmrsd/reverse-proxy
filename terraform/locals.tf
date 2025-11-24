@@ -7,4 +7,6 @@ locals {
   backend_image_url = var.backend_image != "" ? var.backend_image : "${local.artifact_registry_url}/reverse-proxy-backend:${var.image_tag}"
 
   frontend_image_url = var.frontend_image != "" ? var.frontend_image : "${local.artifact_registry_url}/reverse-proxy-frontend:${var.image_tag}"
+
+  frontend_static_image_url = var.frontend_static_image != "" ? var.frontend_static_image : "${local.artifact_registry_url}/reverse-proxy-frontend-static:${var.image_tag}"
 }
