@@ -20,7 +20,7 @@ COPY . .
 
 # Build Flutter web app
 # Note: No HOST configuration needed - browser makes direct requests to backend
-RUN flutter build web --release --dart-define-from-file=flavor/prod.json
+RUN flutter build web --release
 
 ##########################################
 # Deploy with Nginx (static file serving only)

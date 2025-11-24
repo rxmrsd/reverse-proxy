@@ -21,7 +21,7 @@ COPY . .
 
 # Build Flutter web app
 # Note: API calls go to same origin /api/* - nginx proxies to backend
-RUN flutter build web --release --dart-define-from-file=flavor/prod.json
+RUN flutter build web --release
 
 ##########################################
 # Deploy with Nginx (with reverse proxy)
