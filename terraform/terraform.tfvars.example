@@ -2,10 +2,17 @@
 project_id = "your-gcp-project-id"
 region     = "asia-northeast1"
 
+# Artifact Registry
+repository_name = "reverse-proxy"
+
 # Cloud Run Service Names
 backend_service_name  = "reverse-proxy-backend"
 frontend_service_name = "reverse-proxy-frontend"
 
-# Docker Images (built by Cloud Build)
-backend_image  = "asia-northeast1-docker.pkg.dev/your-gcp-project-id/reverse-proxy/reverse-proxy-backend:latest"
-frontend_image = "asia-northeast1-docker.pkg.dev/your-gcp-project-id/reverse-proxy/reverse-proxy-frontend:latest"
+# Docker Images (optional - if not provided, will use images from Artifact Registry)
+# Leave empty to use default: {region}-docker.pkg.dev/{project_id}/{repository_name}/reverse-proxy-{backend|frontend}:{image_tag}
+backend_image  = ""
+frontend_image = ""
+
+# Image tag to deploy (default: latest)
+image_tag = "latest"

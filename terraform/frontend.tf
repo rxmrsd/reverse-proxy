@@ -5,7 +5,7 @@ resource "google_cloud_run_v2_service" "frontend" {
 
   template {
     containers {
-      image = var.frontend_image
+      image = local.frontend_image_url
 
       ports {
         container_port = 80

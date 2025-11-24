@@ -103,13 +103,16 @@ reverse-proxy/
 ├── terraform/            # Terraformインフラ定義
 │   ├── main.tf           # プロバイダー設定
 │   ├── variables.tf      # 変数定義
+│   ├── locals.tf         # ローカル変数（イメージURL生成）
+│   ├── artifact_registry.tf  # Artifact Registryリポジトリ
 │   ├── backend.tf        # バックエンドCloud Runサービス
 │   ├── frontend.tf       # フロントエンドCloud Runサービス
 │   ├── terraform.tfvars.example  # 変数ファイル例
 │   └── .gitignore        # Terraform用.gitignore
 │
 ├── compose.yaml          # Docker Compose設定
-├── cloudbuild.yaml       # Cloud Build設定（全体）
+├── cloudbuild.yaml       # Cloud Build設定（Cloud Runへ直接デプロイ）
+├── cloudbuild-deploy.yaml  # Cloud Build + Terraform統合デプロイ
 └── DEPLOYMENT.md         # デプロイガイド
 ```
 
@@ -223,16 +226,32 @@ COPY nginx.conf /etc/nginx/nginx.conf.template
 
 このアプリケーションはGoogle Cloud Runにデプロイできます。詳細な手順は [DEPLOYMENT.md](DEPLOYMENT.md) を参照してください。
 
+### 推奨: Cloud Build + Terraform統合デプロイ
+
 ```bash
-# Cloud Buildで一括デプロイ
+# 1コマンドで完全デプロイ（イメージビルド→プッシュ→Terraformデプロイ）
+gcloud builds submit \
+  --config=cloudbuild-deploy.yaml \
+  --substitutions=_REGION=asia-northeast1,_REPOSITORY=reverse-proxy
+```
+
+このコマンドで以下が自動実行されます:
+1. Artifact RegistryへのDockerイメージビルド・プッシュ
+2. TerraformによるCloud Runサービスのデプロイ
+3. バックエンドURLの自動注入
+
+### その他のデプロイ方法
+
+```bash
+# Cloud Build のみ（Terraformなし）
 gcloud builds submit \
   --config=cloudbuild.yaml \
   --substitutions=_REGION=asia-northeast1,_REPOSITORY=reverse-proxy
 
-# Terraformでデプロイ
+# Terraformのみ（手動イメージビルド後）
 cd terraform
 terraform init
-terraform apply
+terraform apply -var="project_id=YOUR_PROJECT_ID"
 ```
 
 ## まとめ

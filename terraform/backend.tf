@@ -5,7 +5,7 @@ resource "google_cloud_run_v2_service" "backend" {
 
   template {
     containers {
-      image = var.backend_image
+      image = local.backend_image_url
 
       ports {
         container_port = 8000

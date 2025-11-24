@@ -1,0 +1,102 @@
+# Complete deployment workflow: Build images → Push to Artifact Registry → Deploy with Terraform
+steps:
+  # Step 1: Build backend image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-backend:${SHORT_SHA}'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-backend:latest'
+      - './backend'
+    id: 'build-backend'
+
+  # Step 2: Build frontend image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-frontend:${SHORT_SHA}'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-frontend:latest'
+      - './frontend'
+    id: 'build-frontend'
+    timeout: '1200s'
+
+  # Step 3: Push backend image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '--all-tags'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-backend'
+    id: 'push-backend'
+    waitFor: ['build-backend']
+
+  # Step 4: Push frontend image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '--all-tags'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-frontend'
+    id: 'push-frontend'
+    waitFor: ['build-frontend']
+
+  # Step 5: Terraform init
+  - name: 'hashicorp/terraform:1.6'
+    args:
+      - 'init'
+    dir: 'terraform'
+    id: 'terraform-init'
+    waitFor: ['push-backend', 'push-frontend']
+
+  # Step 6: Terraform plan
+  - name: 'hashicorp/terraform:1.6'
+    args:
+      - 'plan'
+      - '-var=project_id=${PROJECT_ID}'
+      - '-var=region=${_REGION}'
+      - '-var=repository_name=${_REPOSITORY}'
+      - '-var=image_tag=${SHORT_SHA}'
+      - '-out=tfplan'
+    dir: 'terraform'
+    id: 'terraform-plan'
+    waitFor: ['terraform-init']
+
+  # Step 7: Terraform apply
+  - name: 'hashicorp/terraform:1.6'
+    args:
+      - 'apply'
+      - '-auto-approve'
+      - 'tfplan'
+    dir: 'terraform'
+    id: 'terraform-apply'
+    waitFor: ['terraform-plan']
+
+  # Step 8: Get deployment URLs
+  - name: 'hashicorp/terraform:1.6'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        echo "================================================"
+        echo "Deployment completed!"
+        echo "================================================"
+        echo "Backend URL:"
+        terraform output -raw backend_url
+        echo ""
+        echo "Frontend URL:"
+        terraform output -raw frontend_url
+        echo "================================================"
+    dir: 'terraform'
+    id: 'output-urls'
+    waitFor: ['terraform-apply']
+
+substitutions:
+  _REGION: asia-northeast1
+  _REPOSITORY: reverse-proxy
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'N1_HIGHCPU_8'
+
+timeout: '3600s'

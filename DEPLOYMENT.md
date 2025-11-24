@@ -7,9 +7,6 @@ This guide explains how to deploy the reverse proxy application to Google Cloud 
 1. Google Cloud Project with billing enabled
 2. gcloud CLI installed and configured
 3. Required APIs enabled:
-   - Cloud Run API
-   - Cloud Build API
-   - Artifact Registry API
 
 ```bash
 gcloud services enable run.googleapis.com
@@ -17,7 +14,27 @@ gcloud services enable cloudbuild.googleapis.com
 gcloud services enable artifactregistry.googleapis.com
 ```
 
-4. Artifact Registry repository created:
+## Deployment Methods
+
+### Method 1: Complete Deployment with Cloud Build + Terraform (Recommended)
+
+This is the simplest method that handles everything: creating Artifact Registry, building images, pushing them, and deploying with Terraform.
+
+```bash
+# One command to deploy everything
+gcloud builds submit \
+  --config=cloudbuild-deploy.yaml \
+  --substitutions=_REGION=asia-northeast1,_REPOSITORY=reverse-proxy
+```
+
+This will:
+1. Create Artifact Registry repository (if using Terraform)
+2. Build Docker images for backend and frontend
+3. Push images to Artifact Registry
+4. Deploy Cloud Run services using Terraform
+5. Display the deployment URLs
+
+**Note**: For the first deployment, you need to create the Artifact Registry repository manually:
 
 ```bash
 gcloud artifacts repositories create reverse-proxy \
@@ -26,50 +43,54 @@ gcloud artifacts repositories create reverse-proxy \
   --description="Docker repository for reverse proxy app"
 ```
 
-## Deployment Methods
-
-### Method 1: Cloud Build (Recommended)
-
-This method builds and deploys both backend and frontend services.
+Or use Terraform to create it:
 
 ```bash
-# Deploy both services
-gcloud builds submit \
-  --config=cloudbuild.yaml \
-  --substitutions=_REGION=asia-northeast1,_REPOSITORY=reverse-proxy
+cd terraform
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your project_id
 
-# Or deploy individually
-# Backend only
+terraform init
+terraform apply -target=google_artifact_registry_repository.docker_repo
+cd ..
+
+# Then run the complete deployment
+gcloud builds submit --config=cloudbuild-deploy.yaml
+```
+
+### Method 2: Cloud Build Only (Without Terraform)
+
+Deploy services directly using Cloud Build without Terraform.
+
+```bash
+# Deploy backend
 gcloud builds submit \
   --config=backend/cloudbuild.yaml \
   --substitutions=_REGION=asia-northeast1,_REPOSITORY=reverse-proxy
 
-# Frontend only (requires backend to be deployed first)
+# Deploy frontend (after backend is deployed)
 gcloud builds submit \
   --config=frontend/cloudbuild.yaml \
   --substitutions=_REGION=asia-northeast1,_REPOSITORY=reverse-proxy
 ```
 
-### Method 2: Terraform
+### Method 3: Terraform Only (Manual Image Build)
 
-This method uses Terraform to manage Cloud Run services (images must be built first).
+Use Terraform to manage infrastructure, building images manually.
 
-1. Build and push Docker images:
+1. Create Artifact Registry and build images:
 
 ```bash
-# Set variables
 export PROJECT_ID=$(gcloud config get-value project)
 export REGION=asia-northeast1
 export REPOSITORY=reverse-proxy
 
-# Build backend
-cd backend
-docker build -t ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/reverse-proxy-backend:latest .
+# Build and push backend
+docker build -t ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/reverse-proxy-backend:latest ./backend
 docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/reverse-proxy-backend:latest
 
-# Build frontend
-cd ../frontend
-docker build -t ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/reverse-proxy-frontend:latest .
+# Build and push frontend
+docker build -t ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/reverse-proxy-frontend:latest ./frontend
 docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/reverse-proxy-frontend:latest
 ```
 
@@ -80,16 +101,16 @@ cd terraform
 
 # Copy and edit terraform.tfvars
 cp terraform.tfvars.example terraform.tfvars
-# Edit terraform.tfvars with your project settings
+# Edit terraform.tfvars: set project_id and optionally image_tag
 
 # Initialize Terraform
 terraform init
 
 # Plan the deployment
-terraform plan
+terraform plan -var="project_id=${PROJECT_ID}"
 
 # Apply the deployment
-terraform apply
+terraform apply -var="project_id=${PROJECT_ID}"
 ```
 
 ## Configuration
