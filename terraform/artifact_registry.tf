@@ -12,6 +12,14 @@ resource "google_artifact_registry_repository" "docker_repo" {
       keep_count = 5
     }
   }
+
+  lifecycle {
+    # Prevent destruction if repository already exists
+    # Use: terraform import google_artifact_registry_repository.docker_repo projects/PROJECT_ID/locations/REGION/repositories/REPO_NAME
+    ignore_changes = [
+      cleanup_policies,
+    ]
+  }
 }
 
 output "artifact_registry_url" {

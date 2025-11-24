@@ -49,6 +49,20 @@ steps:
     id: 'terraform-init'
     waitFor: ['push-backend', 'push-frontend']
 
+  # Step 5.5: Import existing Artifact Registry (ignore errors if already imported)
+  - name: 'hashicorp/terraform:1.6'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        terraform import \
+          google_artifact_registry_repository.docker_repo \
+          projects/${PROJECT_ID}/locations/${_REGION}/repositories/${_REPOSITORY} \
+          || echo "Repository already imported or does not exist, continuing..."
+    dir: 'terraform'
+    id: 'terraform-import'
+    waitFor: ['terraform-init']
+
   # Step 6: Terraform plan
   - name: 'hashicorp/terraform:1.6'
     args:
@@ -60,7 +74,7 @@ steps:
       - '-out=tfplan'
     dir: 'terraform'
     id: 'terraform-plan'
-    waitFor: ['terraform-init']
+    waitFor: ['terraform-import']
 
   # Step 7: Terraform apply
   - name: 'hashicorp/terraform:1.6'
@@ -72,7 +86,33 @@ steps:
     id: 'terraform-apply'
     waitFor: ['terraform-plan']
 
-  # Step 8: Get deployment URLs
+  # Step 8: Set IAM policies (allow unauthenticated access)
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: bash
+    args:
+      - '-c'
+      - |
+        echo "Setting IAM policies for Cloud Run services..."
+
+        # Allow unauthenticated access to backend (internal only, but needs permission)
+        gcloud run services add-iam-policy-binding reverse-proxy-backend \
+          --region=${_REGION} \
+          --member="allUsers" \
+          --role="roles/run.invoker" \
+          --quiet || echo "Backend IAM policy already set"
+
+        # Allow unauthenticated access to frontend
+        gcloud run services add-iam-policy-binding reverse-proxy-frontend \
+          --region=${_REGION} \
+          --member="allUsers" \
+          --role="roles/run.invoker" \
+          --quiet || echo "Frontend IAM policy already set"
+
+        echo "IAM policies set successfully"
+    id: 'set-iam-policies'
+    waitFor: ['terraform-apply']
+
+  # Step 9: Get deployment URLs
   - name: 'hashicorp/terraform:1.6'
     entrypoint: 'sh'
     args:
@@ -81,15 +121,15 @@ steps:
         echo "================================================"
         echo "Deployment completed!"
         echo "================================================"
-        echo "Backend URL:"
+        echo "Backend URL (internal only):"
         terraform output -raw backend_url
         echo ""
-        echo "Frontend URL:"
+        echo "Frontend URL (public):"
         terraform output -raw frontend_url
         echo "================================================"
     dir: 'terraform'
     id: 'output-urls'
-    waitFor: ['terraform-apply']
+    waitFor: ['set-iam-policies']
 
 substitutions:
   _REGION: asia-northeast1
