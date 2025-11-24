@@ -1,0 +1,22 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: reverse-proxy-frontend
+    environment:
+      - BACKEND_URL=http://backend:8000
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: reverse-proxy-backend
+    ports:
+      - "8000:8000"
+    restart: unless-stopped

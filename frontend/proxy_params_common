@@ -1,0 +1,21 @@
+# Common proxy parameters for backend API requests
+# This file is included by location blocks that proxy to the backend
+
+# Set Host header to backend hostname
+proxy_set_header Host BACKEND_HOST_PLACEHOLDER;
+proxy_set_header X-Real-IP $remote_addr;
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+proxy_set_header X-Forwarded-Proto $scheme;
+
+# Forward request headers
+proxy_pass_request_headers on;
+
+# Proxy settings
+proxy_buffering off;
+proxy_connect_timeout 60s;
+proxy_send_timeout 60s;
+proxy_read_timeout 60s;
+
+# HTTP version 1.1 for keepalive
+proxy_http_version 1.1;
+proxy_set_header Connection "";
