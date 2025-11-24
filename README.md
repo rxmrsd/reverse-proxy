@@ -91,14 +91,26 @@ reverse-proxy/
 │   ├── nginx.conf        # Nginx設定ファイル（テンプレート）
 │   ├── proxy_params_common  # プロキシ共通設定
 │   ├── docker-entrypoint.sh # 起動時設定スクリプト
-│   └── pubspec.yaml      # Flutter依存関係
+│   ├── pubspec.yaml      # Flutter依存関係
+│   └── cloudbuild.yaml   # Cloud Build設定（フロントエンド）
 │
 ├── backend/              # FastAPIアプリケーション
 │   ├── main.py           # FastAPIアプリケーションコード
 │   ├── requirements.txt  # Python依存関係
-│   └── Dockerfile        # Dockerイメージ設定
+│   ├── Dockerfile        # Dockerイメージ設定
+│   └── cloudbuild.yaml   # Cloud Build設定（バックエンド）
 │
-└── compose.yaml          # Docker Compose設定
+├── terraform/            # Terraformインフラ定義
+│   ├── main.tf           # プロバイダー設定
+│   ├── variables.tf      # 変数定義
+│   ├── backend.tf        # バックエンドCloud Runサービス
+│   ├── frontend.tf       # フロントエンドCloud Runサービス
+│   ├── terraform.tfvars.example  # 変数ファイル例
+│   └── .gitignore        # Terraform用.gitignore
+│
+├── compose.yaml          # Docker Compose設定
+├── cloudbuild.yaml       # Cloud Build設定（全体）
+└── DEPLOYMENT.md         # デプロイガイド
 ```
 
 ## セットアップ＆実行方法
@@ -207,6 +219,22 @@ COPY nginx.conf /etc/nginx/nginx.conf.template
 - セキュリティヘッダー（CSP等）の設定
 - Google認証などの外部サービスとの統合
 
+## Cloud Runへのデプロイ
+
+このアプリケーションはGoogle Cloud Runにデプロイできます。詳細な手順は [DEPLOYMENT.md](DEPLOYMENT.md) を参照してください。
+
+```bash
+# Cloud Buildで一括デプロイ
+gcloud builds submit \
+  --config=cloudbuild.yaml \
+  --substitutions=_REGION=asia-northeast1,_REPOSITORY=reverse-proxy
+
+# Terraformでデプロイ
+cd terraform
+terraform init
+terraform apply
+```
+
 ## まとめ
 
 Nginxをリバースプロキシとして活用することで：
@@ -224,3 +252,4 @@ Nginxをリバースプロキシとして活用することで：
 - [Flutter Web](https://flutter.dev/web)
 - [FastAPI](https://fastapi.tiangolo.com/)
 - [Docker マルチステージビルド](https://docs.docker.com/build/building/multi-stage/)
+- [Google Cloud Run](https://cloud.google.com/run)

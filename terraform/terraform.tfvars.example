@@ -1,0 +1,11 @@
+# GCP Project Configuration
+project_id = "your-gcp-project-id"
+region     = "asia-northeast1"
+
+# Cloud Run Service Names
+backend_service_name  = "reverse-proxy-backend"
+frontend_service_name = "reverse-proxy-frontend"
+
+# Docker Images (built by Cloud Build)
+backend_image  = "asia-northeast1-docker.pkg.dev/your-gcp-project-id/reverse-proxy/reverse-proxy-backend:latest"
+frontend_image = "asia-northeast1-docker.pkg.dev/your-gcp-project-id/reverse-proxy/reverse-proxy-frontend:latest"

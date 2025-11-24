@@ -1,0 +1,51 @@
+steps:
+  # Build and deploy backend
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'builds'
+      - 'submit'
+      - '--config=backend/cloudbuild.yaml'
+      - '--substitutions=_REGION=${_REGION},_REPOSITORY=${_REPOSITORY}'
+      - '.'
+    id: 'deploy-backend'
+
+  # Build and deploy frontend (depends on backend)
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'builds'
+      - 'submit'
+      - '--config=frontend/cloudbuild.yaml'
+      - '--substitutions=_REGION=${_REGION},_REPOSITORY=${_REPOSITORY}'
+      - '.'
+    id: 'deploy-frontend'
+    waitFor: ['deploy-backend']
+
+  # Display URLs
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: bash
+    args:
+      - '-c'
+      - |
+        echo "================================================"
+        echo "Deployment completed!"
+        echo "================================================"
+        echo "Backend URL:"
+        gcloud run services describe reverse-proxy-backend \
+          --region=${_REGION} \
+          --format='value(status.url)'
+        echo ""
+        echo "Frontend URL:"
+        gcloud run services describe reverse-proxy-frontend \
+          --region=${_REGION} \
+          --format='value(status.url)'
+        echo "================================================"
+    waitFor: ['deploy-frontend']
+
+substitutions:
+  _REGION: asia-northeast1
+  _REPOSITORY: reverse-proxy
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: '3600s'
