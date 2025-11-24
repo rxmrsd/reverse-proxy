@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 void main() {
   runApp(const MyApp());
@@ -14,39 +13,51 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter + Nginx + FastAPI',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.pink),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Web + Nginx + FastAPI'),
+      home: const MyHomePage(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
+  const MyHomePage({super.key});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  List<dynamic> _items = [];
+class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMixin {
   bool _isLoading = false;
-  String _statusMessage = '';
-  String _healthStatus = '';
+  bool? _isSuccess;
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
-    _fetchItems();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    _scaleAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.elasticOut,
+    );
+    _checkConnection();
   }
 
-  Future<void> _fetchItems() async {
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _checkConnection() async {
     setState(() {
       _isLoading = true;
-      _statusMessage = '';
+      _isSuccess = null;
     });
 
     try {
@@ -54,163 +65,252 @@ class _MyHomePageState extends State<MyHomePage> {
 
       if (response.statusCode == 200) {
         setState(() {
-          _items = json.decode(response.body);
+          _isSuccess = true;
           _isLoading = false;
-          _statusMessage = 'アイテムを${_items.length}件取得しました';
         });
+        _animationController.forward(from: 0);
       } else {
         setState(() {
+          _isSuccess = false;
           _isLoading = false;
-          _statusMessage = 'エラー: ${response.statusCode}';
         });
+        _animationController.forward(from: 0);
       }
     } catch (e) {
       setState(() {
+        _isSuccess = false;
         _isLoading = false;
-        _statusMessage = 'エラー: $e';
       });
-    }
-  }
-
-  Future<void> _healthCheck() async {
-    try {
-      final response = await http.get(Uri.parse('/api/health'));
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        setState(() {
-          _healthStatus = 'ステータス: ${data['status']}\nサービス: ${data['service']}';
-        });
-      } else {
-        setState(() {
-          _healthStatus = 'ヘルスチェック失敗: ${response.statusCode}';
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _healthStatus = 'ヘルスチェックエラー: $e';
-      });
+      _animationController.forward(from: 0);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      const Text(
-                        'Nginxをリバースプロキシとして使用したアプリケーション',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Nginxがフロントエンドの静的ファイルを配信し、\n/api/* へのリクエストをバックエンド（FastAPI）にプロキシします。',
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      const Text(
-                        'API動作確認',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          ElevatedButton.icon(
-                            onPressed: _isLoading ? null : _fetchItems,
-                            icon: const Icon(Icons.refresh),
-                            label: const Text('アイテム一覧を取得'),
-                          ),
-                          const SizedBox(width: 16),
-                          ElevatedButton.icon(
-                            onPressed: _healthCheck,
-                            icon: const Icon(Icons.health_and_safety),
-                            label: const Text('ヘルスチェック'),
-                          ),
-                        ],
-                      ),
-                      if (_statusMessage.isNotEmpty) ...[
-                        const SizedBox(height: 16),
-                        Text(
-                          _statusMessage,
-                          style: TextStyle(
-                            color: _statusMessage.contains('エラー')
-                                ? Colors.red
-                                : Colors.green,
-                          ),
-                        ),
-                      ],
-                      if (_healthStatus.isNotEmpty) ...[
-                        const SizedBox(height: 16),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.green.shade50,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            _healthStatus,
-                            style: const TextStyle(fontFamily: 'monospace'),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              if (_isLoading)
-                const Center(child: CircularProgressIndicator())
-              else if (_items.isNotEmpty) ...[
-                const Text(
-                  'アイテム一覧',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
-                ..._items.map((item) => Card(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: Colors.deepPurple,
-                          child: Text(
-                            '${item['id']}',
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                        ),
-                        title: Text(
-                          item['name'],
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(item['description']),
-                      ),
-                    )),
-              ],
-            ],
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: _isSuccess == true
+                ? [Colors.pink.shade100, Colors.purple.shade100]
+                : _isSuccess == false
+                    ? [Colors.grey.shade200, Colors.grey.shade300]
+                    : [Colors.blue.shade100, Colors.cyan.shade100],
           ),
         ),
+        child: Center(
+          child: _isLoading
+              ? Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const CircularProgressIndicator(
+                      strokeWidth: 3,
+                      color: Colors.pink,
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      '接続中...',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.grey.shade700,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                )
+              : _isSuccess == true
+                  ? _buildSuccessView()
+                  : _isSuccess == false
+                      ? _buildFailureView()
+                      : const SizedBox(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSuccessView() {
+    return ScaleTransition(
+      scale: _scaleAnimation,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.pink.withValues(alpha: 0.3),
+                  blurRadius: 20,
+                  spreadRadius: 5,
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.celebration,
+              size: 60,
+              color: Colors.pink,
+            ),
+          ),
+          const SizedBox(height: 32),
+          const Text(
+            '成功しました！',
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: Colors.pink,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.pink.withValues(alpha: 0.2),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.stars,
+                  color: Colors.amber,
+                  size: 32,
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  '100ポイント',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.pink,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'ゲット！',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.pink.shade300,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 48),
+          ElevatedButton.icon(
+            onPressed: _checkConnection,
+            icon: const Icon(Icons.refresh),
+            label: const Text('もう一度試す'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.pink,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFailureView() {
+    return ScaleTransition(
+      scale: _scaleAnimation,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withValues(alpha: 0.3),
+                  blurRadius: 20,
+                  spreadRadius: 5,
+                ),
+              ],
+            ),
+            child: Icon(
+              Icons.cloud_off,
+              size: 60,
+              color: Colors.grey.shade600,
+            ),
+          ),
+          const SizedBox(height: 32),
+          Text(
+            '失敗しました',
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey.shade700,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withValues(alpha: 0.2),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.cancel,
+                  color: Colors.grey.shade600,
+                  size: 32,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  '報酬はありません',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 48),
+          ElevatedButton.icon(
+            onPressed: _checkConnection,
+            icon: const Icon(Icons.refresh),
+            label: const Text('リトライ'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.grey.shade600,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
