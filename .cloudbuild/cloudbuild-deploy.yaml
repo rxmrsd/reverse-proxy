@@ -62,10 +62,12 @@ steps:
     id: 'push-frontend-static'
     waitFor: ['build-frontend-static']
 
-  # Step 5: Terraform init
+  # Step 5: Terraform init with GCS backend
   - name: 'hashicorp/terraform:1.6'
     args:
       - 'init'
+      - '-backend-config=bucket=${PROJECT_ID}-terraform-state'
+      - '-backend-config=prefix=reverse-proxy'
     dir: 'terraform'
     id: 'terraform-init'
     waitFor: ['push-backend', 'push-frontend', 'push-frontend-static']
