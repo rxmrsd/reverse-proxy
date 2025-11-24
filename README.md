@@ -123,6 +123,7 @@ reverse-proxy/
 │
 ├── .env.example          # 環境変数設定例
 ├── .gitignore            # Git除外ファイル
+├── .gcloudignore         # Cloud Build除外ファイル
 ├── compose.yaml          # Docker Compose設定
 └── DEPLOYMENT.md         # デプロイガイド
 ```
