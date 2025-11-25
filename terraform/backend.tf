@@ -34,8 +34,14 @@ resource "google_cloud_run_v2_service" "backend" {
   ingress = "INGRESS_TRAFFIC_INTERNAL_ONLY"
 }
 
-# Note: Authentication is handled by gcloud run deploy --allow-unauthenticated in Cloud Build
-# IAM settings are not managed by Terraform to avoid permission issues
+# Allow unauthenticated access to backend
+# Even though it's internal only, it needs this permission for frontend to access
+resource "google_cloud_run_v2_service_iam_member" "backend_noauth" {
+  location = google_cloud_run_v2_service.backend.location
+  name     = google_cloud_run_v2_service.backend.name
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+}
 
 output "backend_url" {
   description = "URL of the backend Cloud Run service"

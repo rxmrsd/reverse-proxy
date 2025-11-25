@@ -95,40 +95,7 @@ steps:
     id: 'terraform-apply'
     waitFor: ['terraform-plan']
 
-  # Step 8: Set IAM policies (allow unauthenticated access)
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: bash
-    args:
-      - '-c'
-      - |
-        echo "Setting IAM policies for Cloud Run services..."
-
-        # Allow unauthenticated access to backend (internal only, but needs permission)
-        gcloud run services add-iam-policy-binding reverse-proxy-backend \
-          --region=${_REGION} \
-          --member="allUsers" \
-          --role="roles/run.invoker" \
-          --quiet || echo "Backend IAM policy already set"
-
-        # Allow unauthenticated access to frontend (reverse proxy)
-        gcloud run services add-iam-policy-binding reverse-proxy-frontend \
-          --region=${_REGION} \
-          --member="allUsers" \
-          --role="roles/run.invoker" \
-          --quiet || echo "Frontend IAM policy already set"
-
-        # Allow unauthenticated access to frontend-static
-        gcloud run services add-iam-policy-binding reverse-proxy-frontend-static \
-          --region=${_REGION} \
-          --member="allUsers" \
-          --role="roles/run.invoker" \
-          --quiet || echo "Frontend-static IAM policy already set"
-
-        echo "IAM policies set successfully"
-    id: 'set-iam-policies'
-    waitFor: ['terraform-apply']
-
-  # Step 9: Get deployment URLs
+  # Step 8: Get deployment URLs
   - name: 'hashicorp/terraform:1.6'
     entrypoint: 'sh'
     args:
@@ -148,7 +115,7 @@ steps:
         echo "================================================"
     dir: 'terraform'
     id: 'output-urls'
-    waitFor: ['set-iam-policies']
+    waitFor: ['terraform-apply']
 
 substitutions:
   _REGION: asia-northeast1

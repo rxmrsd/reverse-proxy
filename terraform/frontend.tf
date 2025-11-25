@@ -79,8 +79,21 @@ resource "google_cloud_run_v2_service" "frontend_static" {
   depends_on = [google_cloud_run_v2_service.backend]
 }
 
-# Note: Authentication is handled by gcloud run deploy --allow-unauthenticated in Cloud Build
-# IAM settings are not managed by Terraform to avoid permission issues
+# Allow unauthenticated access to frontend (reverse proxy)
+resource "google_cloud_run_v2_service_iam_member" "frontend_noauth" {
+  location = google_cloud_run_v2_service.frontend.location
+  name     = google_cloud_run_v2_service.frontend.name
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+}
+
+# Allow unauthenticated access to frontend-static
+resource "google_cloud_run_v2_service_iam_member" "frontend_static_noauth" {
+  location = google_cloud_run_v2_service.frontend_static.location
+  name     = google_cloud_run_v2_service.frontend_static.name
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+}
 
 output "frontend_url" {
   description = "URL of the frontend Cloud Run service (reverse proxy)"
