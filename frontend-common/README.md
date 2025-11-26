@@ -6,7 +6,7 @@
 
 このアプリケーションは、異なるデプロイメント戦略で複数回デプロイされます：
 
-- **frontend/** - Strategy 2: Reverse Proxy
+- **frontend-proxy/** - Strategy 2: Reverse Proxy
 - **frontend-static/** - Strategy 1: Direct Backend Access
 
 **重要**: これらのディレクトリは、このディレクトリへのシンボリックリンクを使用しています。
@@ -33,12 +33,12 @@ frontend-common/
 各デプロイメントディレクトリは、以下のファイル/ディレクトリに対してシンボリックリンクを使用しています：
 
 ```bash
-frontend/lib -> ../frontend-common/lib
-frontend/web -> ../frontend-common/web
-frontend/test -> ../frontend-common/test
-frontend/pubspec.yaml -> ../frontend-common/pubspec.yaml
-frontend/pubspec.lock -> ../frontend-common/pubspec.lock
-frontend/analysis_options.yaml -> ../frontend-common/analysis_options.yaml
+frontend-proxy/lib -> ../frontend-common/lib
+frontend-proxy/web -> ../frontend-common/web
+frontend-proxy/test -> ../frontend-common/test
+frontend-proxy/pubspec.yaml -> ../frontend-common/pubspec.yaml
+frontend-proxy/pubspec.lock -> ../frontend-common/pubspec.lock
+frontend-proxy/analysis_options.yaml -> ../frontend-common/analysis_options.yaml
 
 # frontend-staticも同様
 ```
@@ -70,13 +70,13 @@ flutter test
 
 ビルドは、各デプロイメントディレクトリのDockerfileで行われます：
 
-- `frontend/Dockerfile` - リバースプロキシ構成でビルド
+- `frontend-proxy/Dockerfile` - リバースプロキシ構成でビルド
 - `frontend-static/Dockerfile` - 静的ファイル配信構成でビルド
 
 ## 注意事項
 
 1. **アプリケーションコードの変更**: このディレクトリで行ってください
-2. **デプロイメント固有の設定**: 各デプロイメントディレクトリ（`frontend/`、`frontend-static/`）で行ってください
+2. **デプロイメント固有の設定**: 各デプロイメントディレクトリ（`frontend-proxy/`、`frontend-static/`）で行ってください
 3. **シンボリックリンクの扱い**: Git はシンボリックリンクを追跡しますが、実際のファイルはこのディレクトリにのみ存在します
 
 ## アーキテクチャ

@@ -9,7 +9,7 @@ This project provides two different frontend configurations to demonstrate diffe
 | Configuration | Directory | Service Name | Deployment Strategy | Description |
 |--------------|-----------|-------------|---------------------|-------------|
 | ① Static Only | `frontend-static/` | `reverse-proxy-frontend-static` | `direct-backend-access` | Browser makes direct requests to backend |
-| ② Reverse Proxy | `frontend/` | `reverse-proxy-frontend` | `reverse-proxy` | Nginx proxies requests to backend |
+| ② Reverse Proxy | `frontend-proxy/` | `reverse-proxy-frontend` | `reverse-proxy` | Nginx proxies requests to backend |
 
 ### Project Structure
 
@@ -41,7 +41,7 @@ frontend-static/           # Strategy 1: Direct Backend Access deployment
 
 **Key Points**:
 - Application code lives in `frontend-common/` (single source of truth)
-- `frontend/` and `frontend-static/` use symlinks to reference common code
+- `frontend-proxy/` and `frontend-static/` use symlinks to reference common code
 - Each deployment directory contains only deployment-specific files (Dockerfiles, nginx configs)
 - This structure eliminates code duplication and makes deployment differences explicit
 

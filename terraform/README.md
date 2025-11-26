@@ -23,7 +23,7 @@ terraform/
 ├── frontend.tf                # フロントエンドデプロイメント（モジュール使用）
 ├── service_account.tf         # サービスアカウント
 └── modules/
-    └── frontend/              # フロントエンドモジュール
+    └── frontend-proxy/              # フロントエンドモジュール
         ├── main.tf            # モジュールメイン
         ├── variables.tf       # モジュール変数
         ├── outputs.tf         # モジュール出力
@@ -59,7 +59,7 @@ module "frontend_static" {
 
 ### Strategy 2: Reverse Proxy (`frontend`)
 
-- **ディレクトリ**: `../frontend/`
+- **ディレクトリ**: `../frontend-proxy/`
 - **サービス名**: `reverse-proxy-frontend`
 - **デプロイメント戦略**: `reverse-proxy`
 - **ポート**: 80
@@ -151,7 +151,7 @@ terraform output deployment_strategies
 
 ## モジュールの詳細
 
-フロントエンドモジュールの詳細な説明は [modules/frontend/README.md](modules/frontend/README.md) を参照してください。
+フロントエンドモジュールの詳細な説明は [modules/frontend-proxy/README.md](modules/frontend-proxy/README.md) を参照してください。
 
 ## 構成の改善点
 
@@ -161,7 +161,7 @@ terraform output deployment_strategies
 
 **改善後**:
 
-1. **モジュール化** (`modules/frontend/`)
+1. **モジュール化** (`modules/frontend-proxy/`)
    - 共通のデプロイメントロジックを再利用可能なモジュールに抽出
    - デプロイメント戦略を明示的なパラメータとして定義
    - バリデーションを追加して設定ミスを防止

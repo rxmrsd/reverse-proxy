@@ -40,7 +40,7 @@ variable "backend_image" {
 }
 
 variable "frontend_image" {
-  description = "Docker image for frontend reverse proxy (Strategy 2) - Built from frontend/Dockerfile with nginx reverse proxy config"
+  description = "Docker image for frontend reverse proxy (Strategy 2) - Built from frontend-proxy/Dockerfile with nginx reverse proxy config"
   type        = string
   default     = ""
 }

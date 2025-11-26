@@ -22,16 +22,16 @@ steps:
     id: 'deploy-frontend-static'
     waitFor: ['deploy-backend']
 
-  # Build and deploy frontend (Configuration ②: Reverse proxy)
+  # Build and deploy frontend-proxy (Configuration ②: Reverse proxy)
   - name: 'gcr.io/cloud-builders/gcloud'
     args:
       - 'builds'
       - 'submit'
-      - '--config=.cloudbuild/frontend.yaml'
+      - '--config=.cloudbuild/frontend-proxy.yaml'
       - '--region=${_REGION}'
       - '--substitutions=_REGION=${_REGION},_REPOSITORY=${_REPOSITORY}'
       - '.'
-    id: 'deploy-frontend'
+    id: 'deploy-frontend-proxy'
     waitFor: ['deploy-backend']
 
   # Display URLs
@@ -58,7 +58,7 @@ steps:
           --region=${_REGION} \
           --format='value(status.url)'
         echo "================================================"
-    waitFor: ['deploy-frontend-static', 'deploy-frontend']
+    waitFor: ['deploy-frontend-static', 'deploy-frontend-proxy']
 
 substitutions:
   _REGION: asia-northeast1

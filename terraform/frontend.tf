@@ -8,7 +8,7 @@
 # 1. Direct Backend Access (frontend-static)
 # 2. Reverse Proxy (frontend)
 #
-# See modules/frontend/README.md for detailed explanation
+# See modules/frontend-proxy/README.md for detailed explanation
 ################################################################################
 
 ################################################################################
@@ -43,7 +43,7 @@ module "frontend_static" {
 ################################################################################
 # Strategy 2: Reverse Proxy
 # Service: frontend
-# Docker Image: frontend (frontend/Dockerfile)
+# Docker Image: frontend (frontend-proxy/Dockerfile)
 ################################################################################
 # - Flutter app makes API calls to same-origin /api/*
 # - Nginx (in Cloud Run) proxies /api/* to internal backend

@@ -43,7 +43,7 @@ env/
 
 # Flutter/Dart build outputs and caches
 # Note: Common application code is in frontend-common/
-# frontend/ and frontend-static/ contain only deployment-specific files
+# frontend-proxy/ and frontend-static/ contain only deployment-specific files
 frontend-common/build/
 frontend-common/.dart_tool/
 frontend-common/.flutter-plugins
@@ -51,9 +51,9 @@ frontend-common/.flutter-plugins-dependencies
 frontend-common/.packages
 frontend-common/.metadata
 frontend-common/.pub-cache/
-frontend/build/
-frontend/.dart_tool/
-frontend/*.iml
+frontend-proxy/build/
+frontend-proxy/.dart_tool/
+frontend-proxy/*.iml
 frontend-static/build/
 frontend-static/.dart_tool/
 frontend-static/*.iml
