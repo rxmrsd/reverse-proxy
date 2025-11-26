@@ -4,12 +4,54 @@ This project provides two different frontend configurations to demonstrate diffe
 
 ## Overview
 
-Both configurations serve the same Flutter Web application, but they differ in how API requests are made to the backend:
+**IMPORTANT**: Both configurations serve the **SAME Flutter Web application**. The application code is identical. The only difference is the **deployment strategy** for handling backend API communication.
 
-| Configuration | Directory | Service Name | Description |
-|--------------|-----------|-------------|-------------|
-| ① Static Only | `frontend-static/` | `reverse-proxy-frontend-static` | Browser makes direct requests to backend |
-| ② Reverse Proxy | `frontend/` | `reverse-proxy-frontend` | Nginx proxies requests to backend |
+| Configuration | Directory | Service Name | Deployment Strategy | Description |
+|--------------|-----------|-------------|---------------------|-------------|
+| ① Static Only | `frontend-static/` | `reverse-proxy-frontend-static` | `direct-backend-access` | Browser makes direct requests to backend |
+| ② Reverse Proxy | `frontend-proxy/` | `reverse-proxy-frontend` | `reverse-proxy` | Nginx proxies requests to backend |
+
+### Project Structure
+
+The project has been structured to clearly separate common application code from deployment-specific configurations:
+
+```
+frontend-common/           # Common Flutter application code
+├── lib/                   # Shared Dart source code
+├── web/                   # Shared web files
+├── test/                  # Shared tests
+├── pubspec.yaml           # Shared dependencies
+└── README.md
+
+frontend/                  # Strategy 2: Reverse Proxy deployment
+├── lib -> ../frontend-common/lib          # Symlink to common code
+├── web -> ../frontend-common/web          # Symlink to common code
+├── pubspec.yaml -> ../frontend-common/pubspec.yaml
+├── Dockerfile             # Deployment-specific: reverse proxy config
+├── nginx.conf             # Nginx reverse proxy configuration
+├── proxy_params_common    # Proxy parameters
+└── docker-entrypoint.sh   # Dynamic configuration script
+
+frontend-static/           # Strategy 1: Direct Backend Access deployment
+├── lib -> ../frontend-common/lib          # Symlink to common code
+├── web -> ../frontend-common/web          # Symlink to common code
+├── pubspec.yaml -> ../frontend-common/pubspec.yaml
+└── Dockerfile             # Deployment-specific: static serving only
+```
+
+**Key Points**:
+- Application code lives in `frontend-common/` (single source of truth)
+- `frontend-proxy/` and `frontend-static/` use symlinks to reference common code
+- Each deployment directory contains only deployment-specific files (Dockerfiles, nginx configs)
+- This structure eliminates code duplication and makes deployment differences explicit
+
+### Terraform Module
+
+The Terraform configuration has been refactored to use a reusable module ([terraform/modules/frontend/](terraform/modules/frontend/)) that:
+- Encapsulates common frontend deployment logic
+- Supports both deployment strategies through configuration
+- Makes the difference between the two deployments explicit and clear
+- See [terraform/modules/frontend/README.md](terraform/modules/frontend/README.md) for detailed module documentation
 
 ---
 
@@ -32,10 +74,17 @@ Browser → Flutter Web (Static Files) → Backend API
 
 ```
 frontend-static/
-├── Dockerfile          # Simple nginx serving static files
-├── lib/               # Flutter source code
-├── pubspec.yaml       # Flutter dependencies
-└── web/               # Web-specific files
+├── Dockerfile             # Deployment-specific: static serving only
+├── lib -> ../frontend-common/lib        # Symlink to common code
+├── web -> ../frontend-common/web        # Symlink to common code
+├── pubspec.yaml -> ../frontend-common/pubspec.yaml
+└── test -> ../frontend-common/test
+
+frontend-common/           # Common application code (shared)
+├── lib/                   # Flutter source code
+├── web/                   # Web-specific files
+├── test/                  # Unit tests
+└── pubspec.yaml          # Flutter dependencies
 ```
 
 ### Dockerfile Highlights
@@ -93,13 +142,20 @@ Browser → Frontend Cloud Run Container
 
 ```
 frontend/
-├── Dockerfile              # Multi-stage build with nginx proxy
+├── Dockerfile              # Deployment-specific: reverse proxy config
 ├── nginx.conf             # Nginx config template with reverse proxy
 ├── proxy_params_common    # Shared proxy parameters
 ├── docker-entrypoint.sh   # Dynamic config generation
+├── lib -> ../frontend-common/lib        # Symlink to common code
+├── web -> ../frontend-common/web        # Symlink to common code
+├── pubspec.yaml -> ../frontend-common/pubspec.yaml
+└── test -> ../frontend-common/test
+
+frontend-common/           # Common application code (shared)
 ├── lib/                   # Flutter source code
-├── pubspec.yaml          # Flutter dependencies
-└── web/                  # Web-specific files
+├── web/                   # Web-specific files
+├── test/                  # Unit tests
+└── pubspec.yaml          # Flutter dependencies
 ```
 
 ### Dockerfile Highlights

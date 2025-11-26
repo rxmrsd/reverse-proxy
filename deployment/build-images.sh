@@ -64,15 +64,15 @@ echo ""
 echo "Pushing backend image..."
 docker push "$BACKEND_IMAGE"
 
-# Build and push frontend image
+# Build and push frontend image (reverse proxy)
 echo ""
 echo "================================================"
-echo "Building frontend image..."
+echo "Building frontend-proxy image..."
 echo "================================================"
-docker build -t "$FRONTEND_IMAGE" ./frontend
+docker build -t "$FRONTEND_IMAGE" ./frontend-proxy
 
 echo ""
-echo "Pushing frontend image..."
+echo "Pushing frontend-proxy image..."
 docker push "$FRONTEND_IMAGE"
 
 echo ""

@@ -8,7 +8,7 @@ steps:
       - '-t'
       - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-frontend:latest'
       - '.'
-    dir: 'frontend'
+    dir: 'frontend-proxy'
     timeout: '1200s'
 
   # Push the Docker image to Artifact Registry

@@ -83,7 +83,7 @@
 
 ```
 reverse-proxy/
-├── frontend/              # Flutter Webアプリケーション
+├── frontend-proxy/              # Flutter Webアプリケーション
 │   ├── lib/
 │   │   └── main.dart     # Flutterアプリケーションコード
 │   ├── web/              # Webアセット
