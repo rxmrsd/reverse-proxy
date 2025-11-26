@@ -39,23 +39,26 @@ terraform apply \
   -target=google_project_iam_member.cloud_build_deploy_run_admin \
   -target=google_project_iam_member.cloud_build_deploy_iam_admin \
   -target=google_project_iam_member.cloud_build_deploy_artifact_registry \
-  -target=google_service_account_iam_member.cloud_build_sa_user
+  -target=google_project_iam_member.cloud_build_deploy_storage_admin
+
+# Grant additional permissions via gcloud
+gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+  --member="serviceAccount:reverse-proxy-deploy@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --role="roles/cloudbuild.builds.builder"
+
+gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+  --member="serviceAccount:reverse-proxy-deploy@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --role="roles/logging.logWriter"
 ```
 
-### 3. Grant Cloud Build Permission to Use the Service Account
-
-The Cloud Build service account needs permission to impersonate the new service account:
+Or use the deployment script (recommended):
 
 ```bash
-gcloud iam service-accounts add-iam-policy-binding \
-  reverse-proxy-deploy@${PROJECT_ID}.iam.gserviceaccount.com \
-  --member="serviceAccount:${PROJECT_ID}@cloudbuild.gserviceaccount.com" \
-  --role="roles/iam.serviceAccountUser"
+cd ..
+./deployment/setup-service-account.sh
 ```
 
-This is already handled by the `google_service_account_iam_member.cloud_build_sa_user` resource in Terraform.
-
-### 4. Update Cloud Build Trigger (Optional)
+### 3. Update Cloud Build Trigger (Optional)
 
 If you're using Cloud Build triggers, you can configure them to use the service account through the GCP Console or gcloud:
 
@@ -65,15 +68,28 @@ gcloud builds triggers update TRIGGER_NAME \
   --service-account=projects/${PROJECT_ID}/serviceAccounts/reverse-proxy-deploy@${PROJECT_ID}.iam.gserviceaccount.com
 ```
 
-### 5. Run Cloud Build with the Service Account
+### 4. Run Cloud Build with the Service Account
 
-When running Cloud Build manually, you can specify the service account:
+Use the deployment script (recommended):
+
+```bash
+./deployment/deploy-cloudbuild.sh
+```
+
+Or run manually with gcloud:
 
 ```bash
 gcloud builds submit \
   --config=.cloudbuild/cloudbuild-deploy.yaml \
-  --service-account=projects/${PROJECT_ID}/serviceAccounts/reverse-proxy-deploy@${PROJECT_ID}.iam.gserviceaccount.com
+  --region=${REGION} \
+  --gcs-source-staging-dir=gs://${PROJECT_ID}-terraform-state/cloudbuild-source \
+  --service-account=projects/${PROJECT_ID}/serviceAccounts/reverse-proxy-deploy@${PROJECT_ID}.iam.gserviceaccount.com \
+  --substitutions=_REGION=${REGION},_REPOSITORY=reverse-proxy
 ```
+
+The deployment script automatically:
+- Uses the reverse-proxy-deploy service account
+- Stages source code in the Terraform state bucket (which the service account has access to)
 
 ## Service Account Permissions
 
@@ -82,6 +98,10 @@ The service account has the following roles:
 - **roles/run.admin**: Full control over Cloud Run services
 - **roles/iam.serviceAccountUser**: Ability to act as service accounts
 - **roles/artifactregistry.reader**: Read access to Artifact Registry
+- **roles/storage.admin**: Full control over Cloud Storage (for build sources and artifacts)
+- **roles/cloudbuild.builds.builder**: Execute Cloud Build builds
+- **roles/logging.logWriter**: Write logs to Cloud Logging
+- **roles/resourcemanager.projectIamAdmin**: Manage IAM policies (required for Terraform to set Cloud Run IAM policies)
 
 ## IAM Policy Management
 

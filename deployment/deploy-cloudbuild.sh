@@ -43,11 +43,15 @@ echo ""
 # Set the active project
 gcloud config set project "$GCP_PROJECT_ID"
 
-# Submit build to Cloud Build
+# Submit build to Cloud Build with dedicated service account
 echo "Submitting build to Cloud Build..."
+echo "Using service account: reverse-proxy-deploy@${GCP_PROJECT_ID}.iam.gserviceaccount.com"
+echo "Using Terraform state bucket for source staging: gs://${GCP_PROJECT_ID}-terraform-state/cloudbuild-source"
 gcloud builds submit \
   --config=.cloudbuild/cloudbuild-deploy.yaml \
   --region="$GCP_REGION" \
+  --gcs-source-staging-dir="gs://${GCP_PROJECT_ID}-terraform-state/cloudbuild-source" \
+  --service-account="projects/${GCP_PROJECT_ID}/serviceAccounts/reverse-proxy-deploy@${GCP_PROJECT_ID}.iam.gserviceaccount.com" \
   --substitutions=_REGION="$GCP_REGION",_REPOSITORY="$ARTIFACT_REGISTRY_REPOSITORY"
 
 echo ""
