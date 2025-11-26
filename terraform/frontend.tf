@@ -37,7 +37,7 @@ module "frontend_static" {
   vpc       = local.frontend_common_config.vpc
   ingress   = local.frontend_common_config.ingress
 
-  depends_on_services = [google_cloud_run_v2_service.backend]
+  depends_on = [google_cloud_run_v2_service.backend]
 }
 
 ################################################################################
@@ -68,7 +68,7 @@ module "frontend_proxy" {
   vpc       = local.frontend_common_config.vpc
   ingress   = local.frontend_common_config.ingress
 
-  depends_on_services = [google_cloud_run_v2_service.backend]
+  depends_on = [google_cloud_run_v2_service.backend]
 }
 
 ################################################################################

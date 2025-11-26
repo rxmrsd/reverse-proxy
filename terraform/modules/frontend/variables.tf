@@ -62,9 +62,3 @@ variable "ingress" {
   type        = string
   default     = "INGRESS_TRAFFIC_ALL"
 }
-
-variable "depends_on_services" {
-  description = "List of services this deployment depends on"
-  type        = list(any)
-  default     = []
-}

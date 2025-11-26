@@ -58,8 +58,6 @@ resource "google_cloud_run_v2_service" "frontend" {
   }
 
   ingress = var.ingress
-
-  depends_on = var.depends_on_services
 }
 
 # IAM policy for public access
