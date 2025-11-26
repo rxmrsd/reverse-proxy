@@ -4,12 +4,20 @@ This project provides two different frontend configurations to demonstrate diffe
 
 ## Overview
 
-Both configurations serve the same Flutter Web application, but they differ in how API requests are made to the backend:
+**IMPORTANT**: Both configurations serve the **SAME Flutter Web application**. The application code is identical. The only difference is the **deployment strategy** for handling backend API communication.
 
-| Configuration | Directory | Service Name | Description |
-|--------------|-----------|-------------|-------------|
-| ① Static Only | `frontend-static/` | `reverse-proxy-frontend-static` | Browser makes direct requests to backend |
-| ② Reverse Proxy | `frontend/` | `reverse-proxy-frontend` | Nginx proxies requests to backend |
+| Configuration | Directory | Service Name | Deployment Strategy | Description |
+|--------------|-----------|-------------|---------------------|-------------|
+| ① Static Only | `frontend-static/` | `reverse-proxy-frontend-static` | `direct-backend-access` | Browser makes direct requests to backend |
+| ② Reverse Proxy | `frontend/` | `reverse-proxy-frontend` | `reverse-proxy` | Nginx proxies requests to backend |
+
+### Terraform Module
+
+The Terraform configuration has been refactored to use a reusable module ([terraform/modules/frontend/](terraform/modules/frontend/)) that:
+- Encapsulates common frontend deployment logic
+- Supports both deployment strategies through configuration
+- Makes the difference between the two deployments explicit and clear
+- See [terraform/modules/frontend/README.md](terraform/modules/frontend/README.md) for detailed module documentation
 
 ---
 
