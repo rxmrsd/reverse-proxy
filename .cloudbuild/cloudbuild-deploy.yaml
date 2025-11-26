@@ -11,7 +11,7 @@ steps:
       - './backend'
     id: 'build-backend'
 
-  # Step 2: Build frontend image (reverse proxy)
+  # Step 2: Build frontend-proxy image (reverse proxy)
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
@@ -19,8 +19,8 @@ steps:
       - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-frontend:$BUILD_ID'
       - '-t'
       - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-frontend:latest'
-      - './frontend'
-    id: 'build-frontend'
+      - './frontend-proxy'
+    id: 'build-frontend-proxy'
     timeout: '1200s'
 
   # Step 2.5: Build frontend-static image
@@ -44,14 +44,14 @@ steps:
     id: 'push-backend'
     waitFor: ['build-backend']
 
-  # Step 4: Push frontend image
+  # Step 4: Push frontend-proxy image
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
       - '--all-tags'
       - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/reverse-proxy-frontend'
-    id: 'push-frontend'
-    waitFor: ['build-frontend']
+    id: 'push-frontend-proxy'
+    waitFor: ['build-frontend-proxy']
 
   # Step 4.5: Push frontend-static image
   - name: 'gcr.io/cloud-builders/docker'
@@ -70,7 +70,7 @@ steps:
       - '-backend-config=prefix=reverse-proxy'
     dir: 'terraform'
     id: 'terraform-init'
-    waitFor: ['push-backend', 'push-frontend', 'push-frontend-static']
+    waitFor: ['push-backend', 'push-frontend-proxy', 'push-frontend-static']
 
   # Step 6: Terraform plan
   - name: 'hashicorp/terraform:1.6'
