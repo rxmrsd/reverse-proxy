@@ -28,6 +28,14 @@ resource "google_cloud_run_v2_service" "frontend" {
       min_instance_count = 0
       max_instance_count = 10
     }
+
+    vpc_access {
+      network_interfaces {
+        network    = "proxy-subnet"
+        subnetwork = "proxy-subnet3"
+      }
+      egress = "ALL_TRAFFIC"
+    }
   }
 
   traffic {
@@ -65,6 +73,14 @@ resource "google_cloud_run_v2_service" "frontend_static" {
     scaling {
       min_instance_count = 0
       max_instance_count = 10
+    }
+
+    vpc_access {
+      network_interfaces {
+        network    = "proxy-subnet"
+        subnetwork = "proxy-subnet3"
+      }
+      egress = "ALL_TRAFFIC"
     }
   }
 
