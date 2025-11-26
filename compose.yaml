@@ -1,7 +1,7 @@
 services:
   frontend:
     build:
-      context: ./frontend
+      context: ./frontend-proxy
       dockerfile: Dockerfile
     container_name: reverse-proxy-frontend
     environment:
@@ -17,6 +17,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: reverse-proxy-backend
-    ports:
-      - "8000:8000"
+    # Internal communication only - not exposed to host
+    expose:
+      - "8000"
     restart: unless-stopped
