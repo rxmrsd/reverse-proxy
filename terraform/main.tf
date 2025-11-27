@@ -19,3 +19,29 @@ provider "google" {
   project = var.project_id
   region  = var.region
 }
+
+# VPC Network Configuration
+module "vpc" {
+  source = "./modules/vpc"
+
+  project_id   = var.project_id
+  region       = var.region
+  network_name = var.network_name
+  subnet_cidr  = var.subnet_cidr
+}
+
+# VPC Outputs
+output "vpc_network_id" {
+  description = "The ID of the VPC network"
+  value       = module.vpc.network_id
+}
+
+output "vpc_network_name" {
+  description = "The name of the VPC network"
+  value       = module.vpc.network_name
+}
+
+output "vpc_subnet_name" {
+  description = "The name of the subnet"
+  value       = module.vpc.subnet_name
+}

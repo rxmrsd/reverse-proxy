@@ -18,3 +18,4 @@
 # - roles/cloudbuild.builds.builder
 # - roles/logging.logWriter
 # - roles/resourcemanager.projectIamAdmin
+# - roles/compute.networkAdmin

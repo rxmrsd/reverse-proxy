@@ -56,3 +56,16 @@ variable "image_tag" {
   type        = string
   default     = "latest"
 }
+
+# VPC Configuration
+variable "network_name" {
+  description = "Name of the VPC network"
+  type        = string
+  default     = "proxy-vpc"
+}
+
+variable "subnet_cidr" {
+  description = "CIDR range for the subnet"
+  type        = string
+  default     = "10.10.0.0/24"
+}
