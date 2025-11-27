@@ -24,8 +24,8 @@ locals {
       max_instance_count = 10
     }
     vpc = {
-      network    = "proxy-subnet"
-      subnetwork = "proxy-subnet3"
+      network    = module.vpc.network_name
+      subnetwork = module.vpc.subnet_name
     }
     ingress = "INGRESS_TRAFFIC_ALL"
   }

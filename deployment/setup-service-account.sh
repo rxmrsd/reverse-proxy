@@ -90,6 +90,12 @@ gcloud projects add-iam-policy-binding ${PROJECT_ID} \
   --role="roles/resourcemanager.projectIamAdmin" \
   --condition=None
 
+echo "Adding roles/compute.networkAdmin..."
+gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+  --member="serviceAccount:reverse-proxy-deploy@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --role="roles/compute.networkAdmin" \
+  --condition=None
+
 echo ""
 echo -e "${YELLOW}Step 3: Granting GCS bucket permissions...${NC}"
 echo "Adding storage.objectAdmin permission to Terraform state bucket..."
