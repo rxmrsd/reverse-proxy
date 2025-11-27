@@ -167,13 +167,17 @@ reverse-proxy/
 │   └── Dockerfile        # Dockerイメージ設定
 │
 ├── terraform/            # Terraformインフラ定義
-│   ├── main.tf           # プロバイダー設定
+│   ├── main.tf           # プロバイダー設定、VPCモジュール呼び出し
 │   ├── variables.tf      # 変数定義
 │   ├── locals.tf         # ローカル変数（イメージURL生成）
 │   ├── artifact_registry.tf  # Artifact Registryリポジトリ
 │   ├── backend.tf        # バックエンドCloud Runサービス
 │   ├── frontend.tf       # フロントエンドCloud Runサービス
+│   ├── service_account.tf     # サービスアカウント設定
 │   ├── terraform.tfvars.example  # 変数ファイル例
+│   ├── modules/
+│   │   ├── vpc/          # VPCネットワークモジュール
+│   │   └── frontend/     # フロントエンドモジュール
 │   └── .gitignore        # Terraform用.gitignore
 │
 ├── deployment/           # デプロイスクリプト
